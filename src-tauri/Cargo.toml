@@ -15,6 +15,7 @@ tauri-build = { version = "1.5", features = [] }
 [dependencies]
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 async-trait = "0.1.74"
+axum = "0.7.1"
 log = "0.4.20"
 oauth2 = "4.4.2"
 serde = { version = "1.0", features = ["derive"] }

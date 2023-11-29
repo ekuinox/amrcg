@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use anyhow::{bail, ensure, Result};
+use anyhow::{ensure, Result};
 use oauth2::{
     basic::{BasicClient, BasicTokenType},
     reqwest::async_http_client,
@@ -42,24 +40,20 @@ impl OAuth2Authorizer {
         }
     }
 
-    pub async fn try_into_token_with_redirect_url(
-        self,
-        redirect_url: Url,
+    pub async fn exchange_code(
+        &self,
+        code: &str,
+        state: &str,
     ) -> Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> {
-        let params = redirect_url.query_pairs().collect::<HashMap<_, _>>();
-        let code = match params.get("code") {
-            Some(code) => AuthorizationCode::new(code.to_string()),
-            None => bail!("couldn't find pair which key is 'code'"),
-        };
-        let state = match params.get("state") {
-            Some(state) => CsrfToken::new(state.to_string()),
-            None => bail!("couldn't find pair which key is 'state'"),
-        };
+        let code = AuthorizationCode::new(code.to_string());
+        let state = CsrfToken::new(state.to_string());
         ensure!(state.secret() == self.csrf_state.secret());
         let token = self
             .client
             .exchange_code(code)
-            .set_pkce_verifier(self.pkce_verifier)
+            .set_pkce_verifier(PkceCodeVerifier::new(
+                self.pkce_verifier.secret().to_string(),
+            ))
             .request_async(async_http_client)
             .await?;
         Ok(token)
