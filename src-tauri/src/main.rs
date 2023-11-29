@@ -17,6 +17,7 @@ use axum::{
     response::IntoResponse,
     routing::get,
 };
+use log::LevelFilter;
 use oauth2::TokenResponse;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -34,6 +35,8 @@ fn main() {
         .manage(AuthorizerThreadsState::default())
         .plugin(
             tauri_plugin_log::Builder::default()
+                .level(LevelFilter::Warn)
+                .level_for(env!("CARGO_PKG_NAME"), LevelFilter::Info)
                 .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
                 .build(),
         )
